@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unduck — PR Triage</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f8fafc;
+        --text: #0f172a;
+        --muted: #64748b;
+        --border: #e2e8f0;
+        --surface: #ffffff;
+        --hover: #f1f5f9;
+        --link: #2563eb;
+        --todo: #64748b;
+        --merged: #16a34a;
+        --skipped: #d97706;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b0f14;
+          --text: #e2e8f0;
+          --muted: #94a3b8;
+          --border: #1e293b;
+          --surface: #111827;
+          --hover: #172033;
+          --link: #60a5fa;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 32px 20px 64px;
+        font-family:
+          Inter,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .subtitle {
+        margin: 0 0 20px;
+        color: var(--muted);
+      }
+
+      .stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 32px;
+      }
+
+      .stat {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--surface);
+        font-size: 13px;
+      }
+
+      .stat strong {
+        font-variant-numeric: tabular-nums;
+      }
+
+      .section {
+        margin-bottom: 36px;
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .section-header h2 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 24px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .badge--todo {
+        color: var(--todo);
+        background: color-mix(in srgb, var(--todo) 16%, transparent);
+      }
+
+      .badge--merged {
+        color: var(--merged);
+        background: color-mix(in srgb, var(--merged) 16%, transparent);
+      }
+
+      .badge--skipped {
+        color: var(--skipped);
+        background: color-mix(in srgb, var(--skipped) 16%, transparent);
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--surface);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: color-mix(in srgb, var(--text) 3%, transparent);
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      tbody tr:hover td {
+        background: var(--hover);
+      }
+
+      .col-pr {
+        width: 64px;
+      }
+
+      .col-author {
+        width: 150px;
+      }
+
+      .col-date {
+        width: 100px;
+      }
+
+      .pr-num {
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+
+      .pr-title {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .pr-author,
+      .pr-date {
+        color: var(--muted);
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      a {
+        color: var(--link);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .empty {
+        padding: 20px 12px;
+        color: var(--muted);
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Open PRs</h1>
+      <p class="subtitle">
+        Upstream pull requests to triage for this fork. Move rows between tables
+        to update status.
+      </p>
+
+      <div class="stats">
+        <span class="stat"><strong>42</strong> todo</span>
+        <span class="stat"><strong>5</strong> merged</span>
+        <span class="stat"><strong>0</strong> skipped</span>
+      </div>
+
+      <section class="section" id="todo">
+        <div class="section-header">
+          <h2>Todo</h2>
+          <span class="badge badge--todo">42</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="col-pr">PR</th>
+                <th>Title</th>
+                <th class="col-author">Author</th>
+                <th class="col-date">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/148">#148</a></td>
+                <td><span class="pr-title" title="feat: add !gw for google web-only">feat: add !gw for google web-only</span></td>
+                <td class="pr-author">@CALLmeDOMIN</td>
+                <td class="pr-date">2026-03-23</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/139">#139</a></td>
+                <td><span class="pr-title" title="Add Makerworld search">Add Makerworld search</span></td>
+                <td class="pr-author">@j4n-e4t</td>
+                <td class="pr-date">2025-09-08</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/138">#138</a></td>
+                <td><span class="pr-title" title="Refractoring Every single feature and ADDING ALOT of functionalities so Theo don't have to work and can sleep with Unduck">Refractoring Every single feature and ADDING ALOT of functionalities so Theo don't have to work and can sleep with Unduck</span></td>
+                <td class="pr-author">@Coder-soft</td>
+                <td class="pr-date">2025-08-04</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/137">#137</a></td>
+                <td><span class="pr-title" title="refactor(bangs): update NixOS Wiki to new official domain">refactor(bangs): update NixOS Wiki to new official domain</span></td>
+                <td class="pr-author">@HeitorAugustoLN</td>
+                <td class="pr-date">2025-07-21</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/133">#133</a></td>
+                <td><span class="pr-title" title="allow model specifier in t3 bang commands">allow model specifier in t3 bang commands</span></td>
+                <td class="pr-author">@teaonrocks</td>
+                <td class="pr-date">2025-07-08</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/128">#128</a></td>
+                <td><span class="pr-title" title="feat: add modrinth support">feat: add modrinth support</span></td>
+                <td class="pr-author">@ElGeroIngles</td>
+                <td class="pr-date">2025-06-13</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/124">#124</a></td>
+                <td><span class="pr-title" title="Default Search Engine and Customize UI">Default Search Engine and Customize UI</span></td>
+                <td class="pr-author">@npylef</td>
+                <td class="pr-date">2025-05-31</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/120">#120</a></td>
+                <td><span class="pr-title" title="added custom bangs and choosing default on the UI">added custom bangs and choosing default on the UI</span></td>
+                <td class="pr-author">@dev-bhaskar8</td>
+                <td class="pr-date">2025-05-25</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/115">#115</a></td>
+                <td><span class="pr-title" title="Support for appending extra queries to Google searches">Support for appending extra queries to Google searches</span></td>
+                <td class="pr-author">@prov3ntus</td>
+                <td class="pr-date">2025-05-03</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/113">#113</a></td>
+                <td><span class="pr-title" title="Changed RealTimeTrains">Changed "RealTimeTrains"</span></td>
+                <td class="pr-author">@theNeoJade</td>
+                <td class="pr-date">2025-04-24</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/112">#112</a></td>
+                <td><span class="pr-title" title="feat: add udm=14 to google url">feat: add 'udm=14' to google url</span></td>
+                <td class="pr-author">@ebrahimHakimuddin</td>
+                <td class="pr-date">2025-04-20</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/106">#106</a></td>
+                <td><span class="pr-title" title="Move vite-plugin-pwa to devDependencies and update packages">Move vite-plugin-pwa to devDependencies and update packages</span></td>
+                <td class="pr-author">@outdoorsman</td>
+                <td class="pr-date">2025-04-07</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/104">#104</a></td>
+                <td><span class="pr-title" title="Bang update">Bang update</span></td>
+                <td class="pr-author">@Fledermaus-20</td>
+                <td class="pr-date">2025-04-04</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/95">#95</a></td>
+                <td><span class="pr-title" title="Add grep.app bang !grepcode">Add grep.app bang !grepcode</span></td>
+                <td class="pr-author">@LiamRiddell</td>
+                <td class="pr-date">2025-03-14</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/94">#94</a></td>
+                <td><span class="pr-title" title="fix nixopt bang">fix `nixopt` bang</span></td>
+                <td class="pr-author">@zakuciael</td>
+                <td class="pr-date">2025-03-11</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/88">#88</a></td>
+                <td><span class="pr-title" title="Sub bangs">Sub bangs</span></td>
+                <td class="pr-author">@R5dan</td>
+                <td class="pr-date">2025-03-06</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/84">#84</a></td>
+                <td><span class="pr-title" title="Added default bangs through URL param with UI to pick default bang">Added default bangs through URL param with UI to pick default bang</span></td>
+                <td class="pr-author">@Deer-Canidae</td>
+                <td class="pr-date">2025-03-04</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/83">#83</a></td>
+                <td><span class="pr-title" title="src/main: added an engine selector on the page so users can set a default">src/main: added an engine selector on the page so users can set a def…</span></td>
+                <td class="pr-author">@pfaj</td>
+                <td class="pr-date">2025-03-03</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/79">#79</a></td>
+                <td><span class="pr-title" title="Add Perplexity AI chat option to bangs array">Add Perplexity AI chat option to bangs array</span></td>
+                <td class="pr-author">@FormalSnake</td>
+                <td class="pr-date">2025-03-03</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/78">#78</a></td>
+                <td><span class="pr-title" title="Fix gog.com bang">Fix gog.com bang</span></td>
+                <td class="pr-author">@VeryBadFrags</td>
+                <td class="pr-date">2025-03-02</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/76">#76</a></td>
+                <td><span class="pr-title" title="Added I'm feeling lucky functionality using google and duckduckgo">Added I'm feeling lucky functionality using google and duckduckgo</span></td>
+                <td class="pr-author">@Jens599</td>
+                <td class="pr-date">2025-03-02</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/67">#67</a></td>
+                <td><span class="pr-title" title="Adds Microsoft Artifact Registry bang !msar">Adds Microsoft Artifact Registry bang !msar</span></td>
+                <td class="pr-author">@Vreyesm</td>
+                <td class="pr-date">2025-03-01</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/65">#65</a></td>
+                <td><span class="pr-title" title="Fixes #63; Creates hashbang.ts from bangs.ts and updates main.ts to use hashmap">Fixes #63; Creates hashbang.ts from bangs.ts and updates main.ts to use hashmap</span></td>
+                <td class="pr-author">@Thaoh</td>
+                <td class="pr-date">2025-02-28</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/59">#59</a></td>
+                <td><span class="pr-title" title="feat: add ui for changing default bang">feat: add ui for changing default bang</span></td>
+                <td class="pr-author">@Andrew-Bekhiet</td>
+                <td class="pr-date">2025-02-28</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/55">#55</a></td>
+                <td><span class="pr-title" title="feat: redirect to base domain if cleanQuery is empty">feat: redirect to base domain if cleanQuery is empty</span></td>
+                <td class="pr-author">@tfkhdyt</td>
+                <td class="pr-date">2025-02-28</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/53">#53</a></td>
+                <td><span class="pr-title" title="fix: update !yfd bang URL">fix: update !yfd bang URL</span></td>
+                <td class="pr-author">@tfkhdyt</td>
+                <td class="pr-date">2025-02-28</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/52">#52</a></td>
+                <td><span class="pr-title" title="Reverse bang detection">Reverse bang detection</span></td>
+                <td class="pr-author">@mujtabachang</td>
+                <td class="pr-date">2025-02-28</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/51">#51</a></td>
+                <td><span class="pr-title" title="Add Perplexity (!ppx) to bang.ts">Add Perplexity (!ppx) to bang.ts</span></td>
+                <td class="pr-author">@Lermatroid</td>
+                <td class="pr-date">2025-02-27</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/49">#49</a></td>
+                <td><span class="pr-title" title="Add option to edit the character used as a bang">Add option to edit the character used as a bang</span></td>
+                <td class="pr-author">@bcye</td>
+                <td class="pr-date">2025-02-27</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/46">#46</a></td>
+                <td><span class="pr-title" title="docs: add YouTube video explanation to readme">docs: add YouTube video explanation to readme</span></td>
+                <td class="pr-author">@abe-101</td>
+                <td class="pr-date">2025-02-27</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/38">#38</a></td>
+                <td><span class="pr-title" title="Add option to set default bang (and added perplexity)">Add option to set default bang (and added perplexity)</span></td>
+                <td class="pr-author">@GuySabban</td>
+                <td class="pr-date">2025-02-27</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/37">#37</a></td>
+                <td><span class="pr-title" title="added official hypixel skyblock wiki">added official hypixel skyblock wiki</span></td>
+                <td class="pr-author">@aspectxlol</td>
+                <td class="pr-date">2025-02-27</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/36">#36</a></td>
+                <td><span class="pr-title" title="Add ChatGPT support">Add ChatGPT support</span></td>
+                <td class="pr-author">@jasperfue</td>
+                <td class="pr-date">2025-02-27</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/34">#34</a></td>
+                <td><span class="pr-title" title="Grok added">Grok added</span></td>
+                <td class="pr-author">@ivanglushko</td>
+                <td class="pr-date">2025-02-27</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/32">#32</a></td>
+                <td><span class="pr-title" title="Add support for Perplexity.">Add support for Perplexity.</span></td>
+                <td class="pr-author">@danhilse</td>
+                <td class="pr-date">2025-02-24</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/20">#20</a></td>
+                <td><span class="pr-title" title="Change Vite PWA to be a developer dependency">Change Vite PWA to be a developer dependency</span></td>
+                <td class="pr-author">@ethan-davies</td>
+                <td class="pr-date">2025-02-20</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/15">#15</a></td>
+                <td><span class="pr-title" title="feat: add docker support for local">feat: add docker support for local</span></td>
+                <td class="pr-author">@h0i5</td>
+                <td class="pr-date">2025-02-16</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/14">#14</a></td>
+                <td><span class="pr-title" title="Fix relative bangs">Fix relative bangs</span></td>
+                <td class="pr-author">@mybearworld</td>
+                <td class="pr-date">2025-02-16</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/12">#12</a></td>
+                <td><span class="pr-title" title="Default Bang as a URL parameter. (Fixed breaking changes)">✨🚸 Default Bang as a URL parameter. (Fixed breaking changes)</span></td>
+                <td class="pr-author">@elouangrimm</td>
+                <td class="pr-date">2025-02-16</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/11">#11</a></td>
+                <td><span class="pr-title" title="refactor: Convert bangs to lookup object with macros">refactor: Convert bangs to lookup object with macros</span></td>
+                <td class="pr-author">@Not-Jayden</td>
+                <td class="pr-date">2025-02-16</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/9">#9</a></td>
+                <td><span class="pr-title" title="Add OpenSearch Metadata">Add OpenSearch Metadata</span></td>
+                <td class="pr-author">@sadiesilverhand</td>
+                <td class="pr-date">2025-02-15</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/8">#8</a></td>
+                <td><span class="pr-title" title="feat: custom bangs">feat: custom bangs</span></td>
+                <td class="pr-author">@Not-Jayden</td>
+                <td class="pr-date">2025-02-15</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section" id="merged">
+        <div class="section-header">
+          <h2>Merged</h2>
+          <span class="badge badge--merged">5</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="col-pr">PR</th>
+                <th>Title</th>
+                <th class="col-author">Author</th>
+                <th class="col-date">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/142">#142</a></td>
+                <td><span class="pr-title" title="fix google maps bang">fix google maps bang</span></td>
+                <td class="pr-author">@andreasrueb</td>
+                <td class="pr-date">2025-10-04</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/136">#136</a></td>
+                <td><span class="pr-title" title="Default Browser Select UI">Default Browser Select UI</span></td>
+                <td class="pr-author">@BackfishAlexander</td>
+                <td class="pr-date">2025-07-13</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/126">#126</a></td>
+                <td><span class="pr-title" title="feat: Add OpenSearch support for browser integration">feat: Add OpenSearch support for browser integration</span></td>
+                <td class="pr-author">@kunalagra</td>
+                <td class="pr-date">2025-06-08</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/111">#111</a></td>
+                <td><span class="pr-title" title="Add Browser Setup instructions to README">Add Browser Setup instructions to README</span></td>
+                <td class="pr-author">@bxacosta</td>
+                <td class="pr-date">2025-04-20</td>
+              </tr>
+              <tr>
+                <td class="pr-num"><a href="https://github.com/T3-Content/unduck/pull/102">#102</a></td>
+                <td><span class="pr-title" title="Add Kagi bang">Add Kagi bang</span></td>
+                <td class="pr-author">@StayBlue</td>
+                <td class="pr-date">2025-03-30</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section" id="skipped">
+        <div class="section-header">
+          <h2>Skipped</h2>
+          <span class="badge badge--skipped">0</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="col-pr">PR</th>
+                <th>Title</th>
+                <th class="col-author">Author</th>
+                <th class="col-date">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="4" class="empty">No skipped PRs yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>
