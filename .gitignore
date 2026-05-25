@@ -25,3 +25,6 @@ dist-ssr
 
 # Agent Plans
 .cursor/plans
+
+# Local Netlify folder
+.netlify
