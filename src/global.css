@@ -140,12 +140,36 @@ textarea {
   color: #666;
 }
 
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
 .setting {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  margin-top: 16px;
+}
+
+.setting-google-ai {
+  display: none;
+  align-items: center;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+  gap: 8px;
+}
+
+.setting-google-ai.is-visible {
+  display: flex;
+}
+
+.setting-google-ai input {
+  cursor: pointer;
 }
 
 .engine-select {
@@ -298,5 +322,9 @@ textarea {
   .engine-select-option:hover,
   .engine-select-option.selected {
     background: #2a2a2a;
+  }
+
+  .setting-google-ai {
+    color: #999;
   }
 }

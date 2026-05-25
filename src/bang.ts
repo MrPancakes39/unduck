@@ -41239,6 +41239,15 @@ export const bangs = [
   },
   {
     c: "Online Services",
+    d: "www.google.com",
+    r: 1942261,
+    s: "Google (Web Only)",
+    sc: "Google",
+    t: "gweb",
+    u: "https://www.google.com/search?q={{{s}}}&udm=14",
+  },
+  {
+    c: "Online Services",
     d: "plus.google.com",
     r: 0,
     s: "Google Plus",
@@ -122079,11 +122088,5 @@ export const bangs = [
     sc: "Online",
     t: "\u10d0\u10e1\u10e2\u10e0\u10dd",
     u: "http://astronet.ge/?s={{{s}}}",
-  },
-  {
-    t: "gweb",
-    u: "https://www.google.com/search?q={{{s}}}&udm=14",
-    s: "Google (Web Only)",
-    c: "web",
   },
 ];

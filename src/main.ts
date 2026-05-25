@@ -28,17 +28,39 @@ const DEFAULT_ENGINES = ENGINE_OPTIONS.map((engine) => ({
   rank: bangs.find((bang) => bang.t === engine.bang)?.r ?? 0,
 })).sort((a, b) => b.rank - a.rank);
 
-function setupEngineSelect(container: HTMLElement, selectedBang: string) {
+const isGoogleBang = (bang: string) => bang === "g" || bang === "gweb";
+
+function resolveDefaultBang() {
+  const bang = localStorage.getItem("default-bang") ?? "g";
+  return bangs.find((b) => b.t === bang) ?? bangs.find((b) => b.t === "g");
+}
+
+function setupEngineSelect(
+  container: HTMLElement,
+  selectedBang: string,
+  googleAiSetting: HTMLLabelElement,
+  googleAiCheckbox: HTMLInputElement,
+) {
   const trigger = container.querySelector<HTMLButtonElement>(
     ".engine-select-trigger",
   )!;
   const list = container.querySelector<HTMLUListElement>(".engine-select-list")!;
 
+  const googleEngine =
+    DEFAULT_ENGINES.find((engine) => engine.bang === "g") ?? DEFAULT_ENGINES[0]!;
+
   const getEngine = (bang: string) =>
-    DEFAULT_ENGINES.find((engine) => engine.bang === bang) ?? DEFAULT_ENGINES[0]!;
+    isGoogleBang(bang) ? googleEngine : DEFAULT_ENGINES.find((engine) => engine.bang === bang) ?? googleEngine;
 
   const iconClass = (engine: (typeof DEFAULT_ENGINES)[number]) =>
     ["engine-select-icon", engine.iconClass].filter(Boolean).join(" ");
+
+  const updateGoogleAiSetting = (bang: string) => {
+    const googleSelected = isGoogleBang(bang);
+    googleAiSetting.hidden = !googleSelected;
+    googleAiSetting.classList.toggle("is-visible", googleSelected);
+    if (googleSelected) googleAiCheckbox.checked = bang === "g";
+  };
 
   const renderTrigger = (engine: (typeof DEFAULT_ENGINES)[number]) => {
     trigger.innerHTML = `
@@ -61,15 +83,18 @@ function setupEngineSelect(container: HTMLElement, selectedBang: string) {
     trigger.setAttribute("aria-expanded", "true");
   };
 
+  const isEngineSelected = (engineBang: string, bang: string) =>
+    engineBang === "g" ? isGoogleBang(bang) : engineBang === bang;
+
   list.innerHTML = DEFAULT_ENGINES.map(
     (engine) => `
       <li>
         <button
           type="button"
-          class="engine-select-option${engine.bang === selectedBang ? " selected" : ""}"
+          class="engine-select-option${isEngineSelected(engine.bang, selectedBang) ? " selected" : ""}"
           data-bang="${engine.bang}"
           role="option"
-          aria-selected="${engine.bang === selectedBang}"
+          aria-selected="${isEngineSelected(engine.bang, selectedBang)}"
         >
           <img src="${engine.icon}" alt="" class="${iconClass(engine)}" />
           <span>${engine.name}</span>
@@ -79,6 +104,7 @@ function setupEngineSelect(container: HTMLElement, selectedBang: string) {
   ).join("");
 
   renderTrigger(getEngine(selectedBang));
+  updateGoogleAiSetting(selectedBang);
 
   trigger.addEventListener("click", () => {
     if (list.hidden) open();
@@ -92,18 +118,29 @@ function setupEngineSelect(container: HTMLElement, selectedBang: string) {
     if (!button) return;
 
     const bang = button.dataset.bang!;
-    localStorage.setItem("default-bang", bang);
+    const storedBang = bang === "g" ? "g" : bang;
+    localStorage.setItem("default-bang", storedBang);
+    selectedBang = storedBang;
 
     for (const option of list.querySelectorAll<HTMLButtonElement>(
       ".engine-select-option",
     )) {
-      const isSelected = option.dataset.bang === bang;
+      const optionBang = option.dataset.bang!;
+      const isSelected = isEngineSelected(optionBang, storedBang);
       option.classList.toggle("selected", isSelected);
       option.setAttribute("aria-selected", String(isSelected));
     }
 
-    renderTrigger(getEngine(bang));
+    renderTrigger(getEngine(storedBang));
+    updateGoogleAiSetting(storedBang);
     close();
+  });
+
+  googleAiCheckbox.addEventListener("change", () => {
+    const bang = googleAiCheckbox.checked ? "g" : "gweb";
+    localStorage.setItem("default-bang", bang);
+    selectedBang = bang;
+    updateGoogleAiSetting(bang);
   });
 
   document.addEventListener("click", (event) => {
@@ -133,17 +170,23 @@ function noSearchDefaultPageRender() {
             <img src="/clipboard.svg" alt="Copy" />
           </button>
         </div>
-        <div class="setting">
-          <span>Default Search Engine:</span>
-          <div class="engine-select" id="default-browser-select">
-            <button
-              type="button"
-              class="engine-select-trigger"
-              aria-haspopup="listbox"
-              aria-expanded="false"
-            ></button>
-            <ul class="engine-select-list" role="listbox" hidden></ul>
+        <div class="setting-group">
+          <div class="setting">
+            <span>Default Search Engine:</span>
+            <div class="engine-select" id="default-browser-select">
+              <button
+                type="button"
+                class="engine-select-trigger"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+              ></button>
+              <ul class="engine-select-list" role="listbox" hidden></ul>
+            </div>
           </div>
+          <label class="setting-google-ai" id="google-ai-setting" hidden>
+            <input type="checkbox" id="google-ai-checkbox" />
+            <span>Show Google AI search results</span>
+          </label>
         </div>
       </div>
       <footer class="footer">
@@ -172,11 +215,12 @@ function noSearchDefaultPageRender() {
   const engineSelect = app.querySelector<HTMLDivElement>(
     "#default-browser-select",
   )!;
-  setupEngineSelect(engineSelect, LS_DEFAULT_BANG);
-}
+  const googleAiSetting = app.querySelector<HTMLLabelElement>("#google-ai-setting")!;
+  const googleAiCheckbox = app.querySelector<HTMLInputElement>("#google-ai-checkbox")!;
+  const selectedBang = localStorage.getItem("default-bang") ?? "g";
 
-const LS_DEFAULT_BANG = localStorage.getItem("default-bang") ?? "g";
-const defaultBang = bangs.find((b) => b.t === LS_DEFAULT_BANG);
+  setupEngineSelect(engineSelect, selectedBang, googleAiSetting, googleAiCheckbox);
+}
 
 function getBangredirectUrl() {
   const url = new URL(window.location.href);
@@ -189,7 +233,7 @@ function getBangredirectUrl() {
   const match = query.match(/!(\S+)/i);
 
   const bangCandidate = match?.[1]?.toLowerCase();
-  const selectedBang = bangs.find((b) => b.t === bangCandidate) ?? defaultBang;
+  const selectedBang = bangs.find((b) => b.t === bangCandidate) ?? resolveDefaultBang();
 
   // Remove the first bang from the query
   const cleanQuery = query.replace(/!\S+\s*/i, "").trim();
