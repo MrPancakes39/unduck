@@ -1,5 +1,119 @@
 import { bangs } from "./bang";
 import "./global.css";
+import bingIcon from "./assets/bing.svg";
+import braveIcon from "./assets/brave.svg";
+import duckduckgoIcon from "./assets/duckduckgo.svg";
+import ecosiaIcon from "./assets/ecosia.webp";
+import googleIcon from "./assets/google.svg";
+import kagiIcon from "./assets/kagi.png";
+import yahooIcon from "./assets/yahoo.png";
+
+const ENGINE_OPTIONS = [
+  { name: "Google", bang: "g", icon: googleIcon },
+  { name: "DuckDuckGo", bang: "ddg", icon: duckduckgoIcon },
+  { name: "Bing", bang: "b", icon: bingIcon },
+  { name: "Brave", bang: "brave", icon: braveIcon },
+  { name: "Yahoo", bang: "y", icon: yahooIcon },
+  {
+    name: "Ecosia",
+    bang: "ecosia",
+    icon: ecosiaIcon,
+    iconClass: "engine-select-icon-circle",
+  },
+  { name: "Kagi", bang: "kagi", icon: kagiIcon },
+];
+
+const DEFAULT_ENGINES = ENGINE_OPTIONS.map((engine) => ({
+  ...engine,
+  rank: bangs.find((bang) => bang.t === engine.bang)?.r ?? 0,
+})).sort((a, b) => b.rank - a.rank);
+
+function setupEngineSelect(container: HTMLElement, selectedBang: string) {
+  const trigger = container.querySelector<HTMLButtonElement>(
+    ".engine-select-trigger",
+  )!;
+  const list = container.querySelector<HTMLUListElement>(".engine-select-list")!;
+
+  const getEngine = (bang: string) =>
+    DEFAULT_ENGINES.find((engine) => engine.bang === bang) ?? DEFAULT_ENGINES[0]!;
+
+  const iconClass = (engine: (typeof DEFAULT_ENGINES)[number]) =>
+    ["engine-select-icon", engine.iconClass].filter(Boolean).join(" ");
+
+  const renderTrigger = (engine: (typeof DEFAULT_ENGINES)[number]) => {
+    trigger.innerHTML = `
+      <img src="${engine.icon}" alt="" class="${iconClass(engine)}" />
+      <span>${engine.name}</span>
+      <span class="engine-select-chevron" aria-hidden="true">▾</span>
+    `;
+    trigger.setAttribute("aria-expanded", list.hidden ? "false" : "true");
+  };
+
+  const close = () => {
+    list.hidden = true;
+    container.classList.remove("open");
+    trigger.setAttribute("aria-expanded", "false");
+  };
+
+  const open = () => {
+    list.hidden = false;
+    container.classList.add("open");
+    trigger.setAttribute("aria-expanded", "true");
+  };
+
+  list.innerHTML = DEFAULT_ENGINES.map(
+    (engine) => `
+      <li>
+        <button
+          type="button"
+          class="engine-select-option${engine.bang === selectedBang ? " selected" : ""}"
+          data-bang="${engine.bang}"
+          role="option"
+          aria-selected="${engine.bang === selectedBang}"
+        >
+          <img src="${engine.icon}" alt="" class="${iconClass(engine)}" />
+          <span>${engine.name}</span>
+        </button>
+      </li>
+    `,
+  ).join("");
+
+  renderTrigger(getEngine(selectedBang));
+
+  trigger.addEventListener("click", () => {
+    if (list.hidden) open();
+    else close();
+  });
+
+  list.addEventListener("click", (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
+      ".engine-select-option",
+    );
+    if (!button) return;
+
+    const bang = button.dataset.bang!;
+    localStorage.setItem("default-bang", bang);
+
+    for (const option of list.querySelectorAll<HTMLButtonElement>(
+      ".engine-select-option",
+    )) {
+      const isSelected = option.dataset.bang === bang;
+      option.classList.toggle("selected", isSelected);
+      option.setAttribute("aria-selected", String(isSelected));
+    }
+
+    renderTrigger(getEngine(bang));
+    close();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!container.contains(event.target as Node)) close();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") close();
+  });
+}
 
 function noSearchDefaultPageRender() {
   const app = document.querySelector<HTMLDivElement>("#app")!;
@@ -20,8 +134,16 @@ function noSearchDefaultPageRender() {
           </button>
         </div>
         <div class="setting">
-          <span>Default Browser:</span>
-          <select id="default-browser-select"></select>
+          <span>Default Search Engine:</span>
+          <div class="engine-select" id="default-browser-select">
+            <button
+              type="button"
+              class="engine-select-trigger"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+            ></button>
+            <ul class="engine-select-list" role="listbox" hidden></ul>
+          </div>
         </div>
       </div>
       <footer class="footer">
@@ -47,29 +169,10 @@ function noSearchDefaultPageRender() {
     }, 2000);
   });
 
-  // Setup default browser select
-  const defaultBrowserSelect = document.querySelector<HTMLSelectElement>("#default-browser-select")!;
-  const defaultBangs = [
-    { name: "Google", bang: "g" },
-    { name: "DuckDuckGo", bang: "ddg" },
-    { name: "Bing", bang: "b" },
-    { name: "Yahoo", bang: "y" },
-    { name: "Brave", bang: "brave" },
-  ];
-
-  for (const bang of defaultBangs) {
-    const option = document.createElement("option");
-    option.value = bang.bang;
-    option.textContent = bang.name;
-    if (bang.bang === LS_DEFAULT_BANG) {
-      option.selected = true;
-    }
-    defaultBrowserSelect.appendChild(option);
-  }
-
-  defaultBrowserSelect.addEventListener("change", () => {
-    localStorage.setItem("default-bang", defaultBrowserSelect.value);
-  });
+  const engineSelect = app.querySelector<HTMLDivElement>(
+    "#default-browser-select",
+  )!;
+  setupEngineSelect(engineSelect, LS_DEFAULT_BANG);
 }
 
 const LS_DEFAULT_BANG = localStorage.getItem("default-bang") ?? "g";
