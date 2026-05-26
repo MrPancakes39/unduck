@@ -8,6 +8,12 @@ DuckDuckGo does their redirects server side. Their DNS is...not always great. Re
 
 I solved this by doing all of the work client side. Once you've went to https://unduck.link once, the JS is all cache'd and will never need to be downloaded again. Your device does the redirects, not me.
 
+## See it in action
+
+[![Unduck - Making DuckDuckGo Bangs Faster](https://img.youtube.com/vi/_DnNzRaBWUU/0.jpg)](https://www.youtube.com/watch?v=_DnNzRaBWUU)
+
+Click to watch how it works and why I built it
+
 ## Browser Setup
 
 To use Unduck, you need to set it as your default search engine in your browser. Use the following URL as your search
