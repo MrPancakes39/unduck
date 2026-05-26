@@ -6,6 +6,9 @@ import duckduckgoIcon from "./assets/duckduckgo.svg";
 import ecosiaIcon from "./assets/ecosia.webp";
 import googleIcon from "./assets/google.svg";
 import kagiIcon from "./assets/kagi.png";
+import mojeekIcon from "./assets/mojeek.png";
+import qwantIcon from "./assets/qwant.png";
+import startpageIcon from "./assets/startpage.png";
 import yahooIcon from "./assets/yahoo.png";
 import yandexIcon from "./assets/yandex.png";
 
@@ -28,6 +31,24 @@ const ENGINE_OPTIONS = [
   },
   { name: "Brave", bang: "brave", icon: braveIcon },
   { name: "Kagi", bang: "kagi", icon: kagiIcon },
+  {
+    name: "Startpage",
+    bang: "sp",
+    icon: startpageIcon,
+    iconClass: "engine-select-icon-rounded",
+  },
+  {
+    name: "Qwant",
+    bang: "qwant",
+    icon: qwantIcon,
+    iconClass: "engine-select-icon-rounded",
+  },
+  {
+    name: "Mojeek",
+    bang: "mojeek",
+    icon: mojeekIcon,
+    iconClass: "engine-select-icon-rounded",
+  },
 ];
 
 const DEFAULT_ENGINES = ENGINE_OPTIONS;

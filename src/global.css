@@ -215,6 +215,8 @@ textarea {
   list-style: none;
   margin: 0;
   padding: 4px;
+  max-height: 220px;
+  overflow-y: auto;
   border-radius: 4px;
   border: 1px solid #ddd;
   background: #fff;
