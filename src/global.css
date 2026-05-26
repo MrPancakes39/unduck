@@ -155,7 +155,7 @@ textarea {
   gap: 0.5rem;
 }
 
-.setting-google-ai {
+.setting-engine-toggle {
   display: none;
   align-items: center;
   font-size: 14px;
@@ -164,11 +164,11 @@ textarea {
   gap: 8px;
 }
 
-.setting-google-ai.is-visible {
+.setting-engine-toggle.is-visible {
   display: flex;
 }
 
-.setting-google-ai input {
+.setting-engine-toggle input {
   cursor: pointer;
 }
 
@@ -240,6 +240,11 @@ textarea {
 
 .engine-select-icon-circle {
   border-radius: 50%;
+  object-fit: cover;
+}
+
+.engine-select-icon-rounded {
+  border-radius: 3px;
   object-fit: cover;
 }
 
@@ -324,7 +329,7 @@ textarea {
     background: #2a2a2a;
   }
 
-  .setting-google-ai {
+  .setting-engine-toggle {
     color: #999;
   }
 }

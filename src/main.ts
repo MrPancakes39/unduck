@@ -7,28 +7,29 @@ import ecosiaIcon from "./assets/ecosia.webp";
 import googleIcon from "./assets/google.svg";
 import kagiIcon from "./assets/kagi.png";
 import yahooIcon from "./assets/yahoo.png";
+import yandexIcon from "./assets/yandex.png";
 
 const ENGINE_OPTIONS = [
   { name: "Google", bang: "g", icon: googleIcon },
-  { name: "DuckDuckGo", bang: "ddg", icon: duckduckgoIcon },
   { name: "Bing", bang: "b", icon: bingIcon },
-  { name: "Brave", bang: "brave", icon: braveIcon },
-  { name: "Yahoo", bang: "y", icon: yahooIcon },
+  { name: "DuckDuckGo", bang: "ddg", icon: duckduckgoIcon },
   {
     name: "Ecosia",
     bang: "ecosia",
     icon: ecosiaIcon,
     iconClass: "engine-select-icon-circle",
   },
+  { name: "Yahoo", bang: "y", icon: yahooIcon },
+  { name: "Yandex", bang: "yandex", icon: yandexIcon, iconClass: "engine-select-icon-rounded" },
+  { name: "Brave", bang: "brave", icon: braveIcon },
   { name: "Kagi", bang: "kagi", icon: kagiIcon },
 ];
 
-const DEFAULT_ENGINES = ENGINE_OPTIONS.map((engine) => ({
-  ...engine,
-  rank: bangs.find((bang) => bang.t === engine.bang)?.r ?? 0,
-})).sort((a, b) => b.rank - a.rank);
+const DEFAULT_ENGINES = ENGINE_OPTIONS;
 
 const isGoogleBang = (bang: string) => bang === "g" || bang === "gweb";
+
+const isDuckDuckGoBang = (bang: string) => bang === "ddg" || bang === "html";
 
 function resolveDefaultBang() {
   const bang = localStorage.getItem("default-bang") ?? "g";
@@ -40,6 +41,8 @@ function setupEngineSelect(
   selectedBang: string,
   googleAiSetting: HTMLLabelElement,
   googleAiCheckbox: HTMLInputElement,
+  ddgAiSetting: HTMLLabelElement,
+  ddgAiCheckbox: HTMLInputElement,
 ) {
   const trigger = container.querySelector<HTMLButtonElement>(
     ".engine-select-trigger",
@@ -49,8 +52,14 @@ function setupEngineSelect(
   const googleEngine =
     DEFAULT_ENGINES.find((engine) => engine.bang === "g") ?? DEFAULT_ENGINES[0]!;
 
-  const getEngine = (bang: string) =>
-    isGoogleBang(bang) ? googleEngine : DEFAULT_ENGINES.find((engine) => engine.bang === bang) ?? googleEngine;
+  const duckDuckGoEngine =
+    DEFAULT_ENGINES.find((engine) => engine.bang === "ddg") ?? DEFAULT_ENGINES[0]!;
+
+  const getEngine = (bang: string) => {
+    if (isGoogleBang(bang)) return googleEngine;
+    if (isDuckDuckGoBang(bang)) return duckDuckGoEngine;
+    return DEFAULT_ENGINES.find((engine) => engine.bang === bang) ?? googleEngine;
+  };
 
   const iconClass = (engine: (typeof DEFAULT_ENGINES)[number]) =>
     ["engine-select-icon", engine.iconClass].filter(Boolean).join(" ");
@@ -60,6 +69,18 @@ function setupEngineSelect(
     googleAiSetting.hidden = !googleSelected;
     googleAiSetting.classList.toggle("is-visible", googleSelected);
     if (googleSelected) googleAiCheckbox.checked = bang === "g";
+  };
+
+  const updateDuckDuckGoAiSetting = (bang: string) => {
+    const ddgSelected = isDuckDuckGoBang(bang);
+    ddgAiSetting.hidden = !ddgSelected;
+    ddgAiSetting.classList.toggle("is-visible", ddgSelected);
+    if (ddgSelected) ddgAiCheckbox.checked = bang === "ddg";
+  };
+
+  const updateEngineToggles = (bang: string) => {
+    updateGoogleAiSetting(bang);
+    updateDuckDuckGoAiSetting(bang);
   };
 
   const renderTrigger = (engine: (typeof DEFAULT_ENGINES)[number]) => {
@@ -83,8 +104,11 @@ function setupEngineSelect(
     trigger.setAttribute("aria-expanded", "true");
   };
 
-  const isEngineSelected = (engineBang: string, bang: string) =>
-    engineBang === "g" ? isGoogleBang(bang) : engineBang === bang;
+  const isEngineSelected = (engineBang: string, bang: string) => {
+    if (engineBang === "g") return isGoogleBang(bang);
+    if (engineBang === "ddg") return isDuckDuckGoBang(bang);
+    return engineBang === bang;
+  };
 
   list.innerHTML = DEFAULT_ENGINES.map(
     (engine) => `
@@ -104,7 +128,7 @@ function setupEngineSelect(
   ).join("");
 
   renderTrigger(getEngine(selectedBang));
-  updateGoogleAiSetting(selectedBang);
+  updateEngineToggles(selectedBang);
 
   trigger.addEventListener("click", () => {
     if (list.hidden) open();
@@ -118,7 +142,8 @@ function setupEngineSelect(
     if (!button) return;
 
     const bang = button.dataset.bang!;
-    const storedBang = bang === "g" ? "g" : bang;
+    const storedBang =
+      bang === "g" ? "g" : bang === "ddg" ? "ddg" : bang;
     localStorage.setItem("default-bang", storedBang);
     selectedBang = storedBang;
 
@@ -132,7 +157,7 @@ function setupEngineSelect(
     }
 
     renderTrigger(getEngine(storedBang));
-    updateGoogleAiSetting(storedBang);
+    updateEngineToggles(storedBang);
     close();
   });
 
@@ -140,7 +165,14 @@ function setupEngineSelect(
     const bang = googleAiCheckbox.checked ? "g" : "gweb";
     localStorage.setItem("default-bang", bang);
     selectedBang = bang;
-    updateGoogleAiSetting(bang);
+    updateEngineToggles(bang);
+  });
+
+  ddgAiCheckbox.addEventListener("change", () => {
+    const bang = ddgAiCheckbox.checked ? "ddg" : "html";
+    localStorage.setItem("default-bang", bang);
+    selectedBang = bang;
+    updateEngineToggles(bang);
   });
 
   document.addEventListener("click", (event) => {
@@ -183,9 +215,13 @@ function noSearchDefaultPageRender() {
               <ul class="engine-select-list" role="listbox" hidden></ul>
             </div>
           </div>
-          <label class="setting-google-ai" id="google-ai-setting" hidden>
+          <label class="setting-engine-toggle" id="google-ai-setting" hidden>
             <input type="checkbox" id="google-ai-checkbox" />
             <span>Show Google AI search results</span>
+          </label>
+          <label class="setting-engine-toggle" id="ddg-ai-setting" hidden>
+            <input type="checkbox" id="ddg-ai-checkbox" />
+            <span>Show DuckDuckGo AI search results</span>
           </label>
         </div>
       </div>
@@ -217,9 +253,18 @@ function noSearchDefaultPageRender() {
   )!;
   const googleAiSetting = app.querySelector<HTMLLabelElement>("#google-ai-setting")!;
   const googleAiCheckbox = app.querySelector<HTMLInputElement>("#google-ai-checkbox")!;
+  const ddgAiSetting = app.querySelector<HTMLLabelElement>("#ddg-ai-setting")!;
+  const ddgAiCheckbox = app.querySelector<HTMLInputElement>("#ddg-ai-checkbox")!;
   const selectedBang = localStorage.getItem("default-bang") ?? "g";
 
-  setupEngineSelect(engineSelect, selectedBang, googleAiSetting, googleAiCheckbox);
+  setupEngineSelect(
+    engineSelect,
+    selectedBang,
+    googleAiSetting,
+    googleAiCheckbox,
+    ddgAiSetting,
+    ddgAiCheckbox,
+  );
 }
 
 function getBangredirectUrl() {
