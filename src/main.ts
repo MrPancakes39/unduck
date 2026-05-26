@@ -20,7 +20,12 @@ const ENGINE_OPTIONS = [
     iconClass: "engine-select-icon-circle",
   },
   { name: "Yahoo", bang: "y", icon: yahooIcon },
-  { name: "Yandex", bang: "yandex", icon: yandexIcon, iconClass: "engine-select-icon-rounded" },
+  {
+    name: "Yandex",
+    bang: "yandex",
+    icon: yandexIcon,
+    iconClass: "engine-select-icon-rounded",
+  },
   { name: "Brave", bang: "brave", icon: braveIcon },
   { name: "Kagi", bang: "kagi", icon: kagiIcon },
 ];
@@ -42,23 +47,29 @@ function setupEngineSelect(
   googleAiSetting: HTMLLabelElement,
   googleAiCheckbox: HTMLInputElement,
   ddgAiSetting: HTMLLabelElement,
-  ddgAiCheckbox: HTMLInputElement,
+  ddgAiCheckbox: HTMLInputElement
 ) {
   const trigger = container.querySelector<HTMLButtonElement>(
-    ".engine-select-trigger",
+    ".engine-select-trigger"
   )!;
-  const list = container.querySelector<HTMLUListElement>(".engine-select-list")!;
+  const list = container.querySelector<HTMLUListElement>(
+    ".engine-select-list"
+  )!;
 
   const googleEngine =
-    DEFAULT_ENGINES.find((engine) => engine.bang === "g") ?? DEFAULT_ENGINES[0]!;
+    DEFAULT_ENGINES.find((engine) => engine.bang === "g") ??
+    DEFAULT_ENGINES[0]!;
 
   const duckDuckGoEngine =
-    DEFAULT_ENGINES.find((engine) => engine.bang === "ddg") ?? DEFAULT_ENGINES[0]!;
+    DEFAULT_ENGINES.find((engine) => engine.bang === "ddg") ??
+    DEFAULT_ENGINES[0]!;
 
   const getEngine = (bang: string) => {
     if (isGoogleBang(bang)) return googleEngine;
     if (isDuckDuckGoBang(bang)) return duckDuckGoEngine;
-    return DEFAULT_ENGINES.find((engine) => engine.bang === bang) ?? googleEngine;
+    return (
+      DEFAULT_ENGINES.find((engine) => engine.bang === bang) ?? googleEngine
+    );
   };
 
   const iconClass = (engine: (typeof DEFAULT_ENGINES)[number]) =>
@@ -115,7 +126,9 @@ function setupEngineSelect(
       <li>
         <button
           type="button"
-          class="engine-select-option${isEngineSelected(engine.bang, selectedBang) ? " selected" : ""}"
+          class="engine-select-option${
+            isEngineSelected(engine.bang, selectedBang) ? " selected" : ""
+          }"
           data-bang="${engine.bang}"
           role="option"
           aria-selected="${isEngineSelected(engine.bang, selectedBang)}"
@@ -124,7 +137,7 @@ function setupEngineSelect(
           <span>${engine.name}</span>
         </button>
       </li>
-    `,
+    `
   ).join("");
 
   renderTrigger(getEngine(selectedBang));
@@ -137,18 +150,17 @@ function setupEngineSelect(
 
   list.addEventListener("click", (event) => {
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
-      ".engine-select-option",
+      ".engine-select-option"
     );
     if (!button) return;
 
     const bang = button.dataset.bang!;
-    const storedBang =
-      bang === "g" ? "g" : bang === "ddg" ? "ddg" : bang;
+    const storedBang = bang === "g" ? "g" : bang === "ddg" ? "ddg" : bang;
     localStorage.setItem("default-bang", storedBang);
     selectedBang = storedBang;
 
     for (const option of list.querySelectorAll<HTMLButtonElement>(
-      ".engine-select-option",
+      ".engine-select-option"
     )) {
       const optionBang = option.dataset.bang!;
       const isSelected = isEngineSelected(optionBang, storedBang);
@@ -249,12 +261,16 @@ function noSearchDefaultPageRender() {
   });
 
   const engineSelect = app.querySelector<HTMLDivElement>(
-    "#default-browser-select",
+    "#default-browser-select"
   )!;
-  const googleAiSetting = app.querySelector<HTMLLabelElement>("#google-ai-setting")!;
-  const googleAiCheckbox = app.querySelector<HTMLInputElement>("#google-ai-checkbox")!;
+  const googleAiSetting =
+    app.querySelector<HTMLLabelElement>("#google-ai-setting")!;
+  const googleAiCheckbox = app.querySelector<HTMLInputElement>(
+    "#google-ai-checkbox"
+  )!;
   const ddgAiSetting = app.querySelector<HTMLLabelElement>("#ddg-ai-setting")!;
-  const ddgAiCheckbox = app.querySelector<HTMLInputElement>("#ddg-ai-checkbox")!;
+  const ddgAiCheckbox =
+    app.querySelector<HTMLInputElement>("#ddg-ai-checkbox")!;
   const selectedBang = localStorage.getItem("default-bang") ?? "g";
 
   setupEngineSelect(
@@ -263,7 +279,7 @@ function noSearchDefaultPageRender() {
     googleAiSetting,
     googleAiCheckbox,
     ddgAiSetting,
-    ddgAiCheckbox,
+    ddgAiCheckbox
   );
 }
 
@@ -275,13 +291,19 @@ function getBangredirectUrl() {
     return null;
   }
 
-  const match = query.match(/!(\S+)/i);
+  // Match both !bang and bang! formats
+  const prefixMatch = query.match(/!(\S+)/i);
+  const suffixMatch = query.match(/(\S+)!/);
 
-  const bangCandidate = match?.[1]?.toLowerCase();
-  const selectedBang = bangs.find((b) => b.t === bangCandidate) ?? resolveDefaultBang();
+  const bangCandidate = (prefixMatch?.[1] ?? suffixMatch?.[1])?.toLowerCase();
+  const selectedBang =
+    bangs.find((b) => b.t === bangCandidate) ?? resolveDefaultBang();
 
-  // Remove the first bang from the query
-  const cleanQuery = query.replace(/!\S+\s*/i, "").trim();
+  // Remove the bang from either position
+  const cleanQuery = query
+    .replace(/!\S+\s*/i, "") // Remove prefix bang
+    .replace(/\s*\S+!/, "") // Remove suffix bang
+    .trim();
 
   // If the query is just `!gh`, use `github.com` instead of `github.com/search?q=`
   if (cleanQuery === "")
@@ -292,7 +314,7 @@ function getBangredirectUrl() {
   const searchUrl = selectedBang?.u.replace(
     "{{{s}}}",
     // Replace %2F with / to fix formats like "!ghr+t3dotgg/unduck"
-    encodeURIComponent(cleanQuery).replace(/%2F/g, "/"),
+    encodeURIComponent(cleanQuery).replace(/%2F/g, "/")
   );
   if (!searchUrl) return null;
 
