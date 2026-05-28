@@ -304,6 +304,15 @@ function noSearchDefaultPageRender() {
   );
 }
 
+function ensureProtocol(url: string, defaultProtocol = "https://") {
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.href; // If valid, return as is
+  } catch (e) {
+    return `${defaultProtocol}${url}`;
+  }
+}
+
 function getBangredirectUrl() {
   const url = new URL(window.location.href);
   const query = url.searchParams.get("q")?.trim() ?? "";
@@ -330,12 +339,17 @@ function getBangredirectUrl() {
   if (cleanQuery === "")
     return selectedBang ? `https://${selectedBang.d}` : null;
 
+  // Redirect to base domain if cleanQuery is empty
+  if (!cleanQuery && selectedBang?.d) {
+    return ensureProtocol(selectedBang.d);
+  }
+
   // Format of the url is:
   // https://www.google.com/search?q={{{s}}}
   const searchUrl = selectedBang?.u.replace(
     "{{{s}}}",
     // Replace %2F with / to fix formats like "!ghr+t3dotgg/unduck"
-    encodeURIComponent(cleanQuery).replace(/%2F/g, "/")
+    encodeURIComponent(cleanQuery).replace(/%2F/g, "/"),
   );
   if (!searchUrl) return null;
 
