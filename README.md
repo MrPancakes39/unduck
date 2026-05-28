@@ -1,29 +1,24 @@
-# Unduck
+# Re:Search
 
-DuckDuckGo's bang redirects are too slow. Add the following URL as a custom search engine to your browser. Enables all of DuckDuckGo's bangs to work, but much faster.
+Re:Search is a fork of Unduck.
 
-## How is it that much faster?
+DuckDuckGo's bang redirects can be slow. Re:Search lets you add a custom browser search engine that supports DuckDuckGo bangs while doing the redirect work client-side.
 
-DuckDuckGo does their redirects server side. Their DNS is...not always great. Result is that it often takes ages.
-
-I solved this by doing all of the work client side. Once you've went to https://unduck.link once, the JS is all cache'd and will never need to be downloaded again. Your device does the redirects, not me.
-
-## See it in action
-
-[![Unduck - Making DuckDuckGo Bangs Faster](https://img.youtube.com/vi/_DnNzRaBWUU/0.jpg)](https://www.youtube.com/watch?v=_DnNzRaBWUU)
-
-Click to watch how it works and why I built it
+This fork is hosted on Netlify at https://research.mrpancakes39.xyz/.
 
 ## Browser Setup
 
-To use Unduck, you need to set it as your default search engine in your browser. Use the following URL as your search
-engine:
+Use this URL as your custom search engine URL:
 
-```
-https://unduck.link?q=%s
+```text
+https://research.mrpancakes39.xyz/?q=%s
 ```
 
-For specific browser configuration instructions, refer to these guides:
+## How It Works
+
+DuckDuckGo handles bang redirects server-side. Re:Search keeps the bang lookup in the client so, after the app is loaded, your browser can resolve redirects directly.
+
+## Browser Guides
 
 - **Chrome**: [Set default search engine and site search shortcuts](https://support.google.com/chrome/answer/95426)
 - **Firefox**: [Change your default search settings in Firefox](https://support.mozilla.org/en-US/kb/change-your-default-search-settings-firefox)
