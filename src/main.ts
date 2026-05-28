@@ -1,3 +1,4 @@
+import posthog from "posthog-js";
 import { bangs } from "./bang";
 import "./global.css";
 import bingIcon from "./assets/bing.svg";
@@ -347,7 +348,7 @@ function getBangredirectUrl() {
   const searchUrl = selectedBang?.u.replace(
     "{{{s}}}",
     // Replace %2F with / to fix formats like "!ghr+t3dotgg/unduck"
-    encodeURIComponent(cleanQuery).replace(/%2F/g, "/"),
+    encodeURIComponent(cleanQuery).replace(/%2F/g, "/")
   );
   if (!searchUrl) return null;
 
@@ -361,3 +362,11 @@ function doRedirect() {
 }
 
 doRedirect();
+
+// Posthog Analytics
+if (import.meta.env.VITE_POSTHOG_API_KEY) {
+  posthog.init(import.meta.env.VITE_POSTHOG_API_KEY, {
+    api_host: "https://eu.i.posthog.com",
+    defaults: "2026-01-30",
+  });
+}
