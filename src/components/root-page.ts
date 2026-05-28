@@ -17,7 +17,7 @@ export class RootPage extends Component {
       <footer class="footer">
         <a href="https://mrpancakes39.xyz" target="_blank">sal</a>
         •
-        <a href="https://github.com/MrPancakes39/unduck" target="_blank">github</a>
+        <a href="https://github.com/MrPancakes39/re-search" target="_blank">github</a>
       </footer>
     </div>
   `;
