@@ -1,10 +1,9 @@
 import "./global.css";
-import "./lib/analytics";
 import { RootPage } from "./components/root-page";
 import { getBangRedirectUrl } from "./lib/redirect";
 
-function main() {
-  const searchUrl = getBangRedirectUrl();
+async function main() {
+  const searchUrl = await getBangRedirectUrl();
 
   // Error case
   if (searchUrl == null) return;
@@ -16,6 +15,7 @@ function main() {
   }
 
   // Render page case
+  await import("./lib/analytics");
   new RootPage().mount();
 }
 

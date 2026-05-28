@@ -1,5 +1,3 @@
-import { bangs } from "./bangs";
-
 const RENDER_PAGE = Symbol("RENDER_PAGE");
 
 function ensureProtocol(url: string, defaultProtocol = "https://") {
@@ -11,17 +9,25 @@ function ensureProtocol(url: string, defaultProtocol = "https://") {
   }
 }
 
-function resolveDefaultBang() {
+type Bang = {
+  d: string;
+  t: string;
+  u: string;
+};
+
+function resolveDefaultBang(bangs: Bang[]) {
   const bang = localStorage.getItem("default-bang") ?? "g";
   return bangs.find((b) => b.t === bang) ?? bangs.find((b) => b.t === "g");
 }
 
-export function getBangRedirectUrl() {
+export async function getBangRedirectUrl() {
   const url = new URL(window.location.href);
   const query = url.searchParams.get("q")?.trim() ?? "";
   if (!query) {
     return RENDER_PAGE;
   }
+
+  const { bangs } = await import("./bangs");
 
   // Match both !bang and bang! formats
   const prefixMatch = query.match(/!(\S+)/i);
@@ -29,7 +35,7 @@ export function getBangRedirectUrl() {
 
   const bangCandidate = (prefixMatch?.[1] ?? suffixMatch?.[1])?.toLowerCase();
   const selectedBang =
-    bangs.find((b) => b.t === bangCandidate) ?? resolveDefaultBang();
+    bangs.find((b) => b.t === bangCandidate) ?? resolveDefaultBang(bangs);
 
   // Remove the bang from either position
   const cleanQuery = query
