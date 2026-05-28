@@ -27,7 +27,8 @@ export const bangs = [
     sc: "Programming",
     t: "npmx",
     u: "https://npmx.dev/search?q={{{s}}}",
-  },{
+  },
+  {
     c: "3D Printing",
     d: "makerworld.com",
     r: 0,
@@ -35,6 +36,15 @@ export const bangs = [
     sc: "3D Printing",
     t: "maw",
     u: "https://makerworld.com/en/search/models?keyword={{{s}}}",
+  },
+  {
+    c: "Tech",
+    d: "www.modrinth.com",
+    r: 0,
+    s: "Modrinth",
+    sc: "Downloads (add-ons)",
+    t: "modr",
+    u: "https://modrinth.com/mods?q={{{s}}}",
   },
   {
     c: "Tech",
